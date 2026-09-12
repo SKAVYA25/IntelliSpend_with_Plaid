@@ -50,3 +50,6 @@ next-env.d.ts
 
 # Local migration backups
 /prisma/migrations_backup/
+# AI coding tool instruction files
+AGENTS.md
+CLAUDE.md
