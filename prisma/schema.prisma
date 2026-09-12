@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String?
+  email        String        @unique
+  passwordHash String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  transactions Transaction[]
+  budgets      Budget[]
+  goals        Goal[]
+  insights     AIInsight[]
+  plaidItems   PlaidItem[]
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  description String
+  amount      Decimal         @db.Decimal(12, 2)
+  type        TransactionType
+  category    String
+  subcategory String?
+  date        DateTime
+  source      TransactionSource @default(MANUAL)
+  plaidTransactionId String?   @unique
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  plaidAccountId String?
+  plaidAccount   PlaidAccount? @relation(fields: [plaidAccountId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([date])
+  @@index([plaidAccountId])
+}
+
+model Budget {
+  id         String   @id @default(cuid())
+  category   String
+  amount     Decimal  @db.Decimal(12, 2)
+  month      Int
+  year       Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, month, year])
+}
+
+model Goal {
+  id            String   @id @default(cuid())
+  name          String
+  targetAmount  Decimal  @db.Decimal(12, 2)
+  currentAmount Decimal  @db.Decimal(12, 2) @default(0)
+  deadline      DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AIInsight {
+  id         String   @id @default(cuid())
+  title      String
+  message    String
+  createdAt  DateTime  @default(now())
+
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PlaidItem {
+  id                String   @id @default(cuid())
+  itemId            String   @unique
+  accessToken       String
+  institutionId     String?
+  institutionName   String?
+  syncCursor        String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  accounts          PlaidAccount[]
+
+  @@index([userId])
+}
+
+model PlaidAccount {
+  id              String   @id @default(cuid())
+  accountId       String   @unique
+  name            String
+  officialName    String?
+  mask            String?
+  type            String
+  subtype         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  plaidItemId     String
+  plaidItem       PlaidItem @relation(fields: [plaidItemId], references: [id], onDelete: Cascade)
+
+  transactions    Transaction[]
+
+  @@index([plaidItemId])
+}
+
+enum TransactionType {
+  income
+  expense
+}
+
+enum TransactionSource {
+  MANUAL
+  PLAID
+}

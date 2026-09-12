@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+!.env.example
+
+# AI coding tool files
+/.agents/
+/.claude/
+/.cursor/
+/.devin/
+
+# Local migration backups
+/prisma/migrations_backup/
